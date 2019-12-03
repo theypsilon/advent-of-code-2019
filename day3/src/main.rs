@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 type Step = u64;
-type Coordinate = (usize, usize, Step);
+type Coordinate = (i64, i64, Step);
 
 fn main() {
     let inputs = PUZZLE_INPUT
@@ -10,19 +10,19 @@ fn main() {
         .collect::<Vec<String>>();
     let first = parse(&inputs[0]);
     let second = parse(&inputs[1]);
-    let distance = cross_distance(&first, &second, 20000);
+    let distance = cross_distance(&first, &second);
     println!("1. distance: {}", distance);
 
-    let steps = cross_steps(&first, &second, 20000);
+    let steps = cross_steps(&first, &second);
     println!("2. steps: {}", steps);
 }
 
 #[derive(PartialEq, Debug)]
 enum Segment {
-    R(usize),
-    L(usize),
-    U(usize),
-    D(usize),
+    R(i64),
+    L(i64),
+    U(i64),
+    D(i64),
 }
 
 fn parse(segments: &str) -> Vec<Segment> {
@@ -31,7 +31,7 @@ fn parse(segments: &str) -> Vec<Segment> {
         .split(",")
         .map(|segment| {
             let parts = segment.split_at(1);
-            let number = parts.1.parse::<usize>().unwrap();
+            let number = parts.1.parse::<i64>().unwrap();
             match String::from(parts.0).chars().nth(0) {
                 Some('R') => Segment::R(number),
                 Some('L') => Segment::L(number),
@@ -51,21 +51,20 @@ enum Wire {
 }
 
 fn step_trough_matrix(
-    matrix: &mut HashMap<usize, Wire>,
-    y: usize,
-    x: usize,
+    matrix: &mut HashMap<(i64, i64), Wire>,
+    y: i64,
+    x: i64,
     id: i8,
     coords: &mut Vec<Coordinate>,
     step: &mut Step,
-    size: usize,
 ) {
     *step += 1;
-    match matrix.get(&(y * size + x)) {
-        None => {matrix.insert(y * size + x, Wire::Pass(id, *step));},
+    match matrix.get(&(y,x)) {
+        None => {matrix.insert((y,x), Wire::Pass(id, *step));},
         Some(Wire::Pass(other_id, other_step)) => {
             if id != *other_id {
                 coords.push((y, x, *step + *other_step));
-                matrix.insert(y * size + x, Wire::Cross);
+                matrix.insert((y,x), Wire::Cross);
             }
         }
         Some(Wire::Cross) => panic!("Cross over cross"),
@@ -74,39 +73,38 @@ fn step_trough_matrix(
 }
 
 fn start_tracing(
-    matrix: &mut HashMap<usize, Wire>,
+    matrix: &mut HashMap<(i64, i64), Wire>,
     segments: &Vec<Segment>,
     id: i8,
     coords: &mut Vec<Coordinate>,
-    size: usize,
 ) {
-    let mut x = size / 2;
-    let mut y = size / 2;
-    matrix.insert(y * size + x, Wire::Origin(0));
+    let mut x = 0;
+    let mut y = 0;
+    matrix.insert((y, x), Wire::Origin(0));
     let mut step = 0;
     for segment in segments {
         match segment {
             Segment::R(value) => {
                 for i in 1..= *value {
-                    step_trough_matrix(matrix, y, x + i, id, coords, &mut step, size);
+                    step_trough_matrix(matrix, y, x + i, id, coords, &mut step);
                 }
                 x = x + value;
             }
             Segment::L(value) => {
                 for i in 1..= *value {
-                    step_trough_matrix(matrix, y, x - i, id, coords, &mut step, size);
+                    step_trough_matrix(matrix, y, x - i, id, coords, &mut step);
                 }
                 x = x - value;
             }
             Segment::U(value) => {
                 for i in 1..= *value {
-                    step_trough_matrix(matrix, y - i, x, id, coords, &mut step, size);
+                    step_trough_matrix(matrix, y - i, x, id, coords, &mut step);
                 }
                 y = y - value;
             }
             Segment::D(value) => {
                 for i in 1..= *value {
-                    step_trough_matrix(matrix, y + i, x, id, coords, &mut step, size);
+                    step_trough_matrix(matrix, y + i, x, id, coords, &mut step);
                 }
                 y = y + value;
             }
@@ -115,12 +113,28 @@ fn start_tracing(
 }
 
 #[allow(dead_code)]
-fn print_matrix(matrix: &HashMap<usize, Wire>, size: usize) {
-    for y in 0..size {
-        for x in 0..size {
+fn print_matrix(matrix: &HashMap<(i64, i64), Wire>) {
+    let mut max: (i64, i64) = (-1000000000, -1000000000);
+    let mut min: (i64, i64) = (1000000000, 1000000000);
+    for ((x, y), _) in matrix {
+        if *x < min.0 {
+            min.0 = *x;
+        }
+        if *y < min.1 {
+            min.1 = *y;
+        }
+        if *x > max.0 {
+            max.0 = *x;
+        }
+        if *y > max.1 {
+            max.1 = *y;
+        }
+    }
+    for y in min.1 - 2 .. max.1 + 2 {
+        for x in min.0 - 2 .. max.0 + 2 {
             print!(
                 "{} ",
-                match matrix.get(&(y * size + x)) {
+                match matrix.get(&(y, x)) {
                     None => String::from(" ."),
                     Some(Wire::Pass(_, s)) => format!("{:02}", s),
                     Some(Wire::Cross) => String::from(" x"),
@@ -132,19 +146,14 @@ fn print_matrix(matrix: &HashMap<usize, Wire>, size: usize) {
     }
 }
 
-fn cross_distance(first: &Vec<Segment>, second: &Vec<Segment>, size: usize) -> i64 {
+fn cross_distance(first: &Vec<Segment>, second: &Vec<Segment>) -> i64 {
     let mut matrix = HashMap::new();
     let mut crosses: Vec<Coordinate> = vec![];
-    start_tracing(&mut matrix, first, 1, &mut crosses, size);
-    start_tracing(&mut matrix, second, 2, &mut crosses, size);
+    start_tracing(&mut matrix, first, 1, &mut crosses);
+    start_tracing(&mut matrix, second, 2, &mut crosses);
     let mut min = 100000000000;
     for cross in crosses {
-        let origin_y = (size / 2) as i64;
-        let origin_x = (size / 2) as i64;
-        let y = cross.0 as i64;
-        let x = cross.1 as i64;
-
-        let distance = (origin_y - y).abs() + (origin_x - x).abs();
+        let distance = cross.0.abs() + cross.1.abs();
         if distance < min {
             min = distance;
         }
@@ -152,11 +161,11 @@ fn cross_distance(first: &Vec<Segment>, second: &Vec<Segment>, size: usize) -> i
     min
 }
 
-fn cross_steps(first: &Vec<Segment>, second: &Vec<Segment>, size: usize) -> i64 {
+fn cross_steps(first: &Vec<Segment>, second: &Vec<Segment>) -> i64 {
     let mut matrix = HashMap::new();
     let mut crosses: Vec<Coordinate> = vec![];
-    start_tracing(&mut matrix, first, 1, &mut crosses, size);
-    start_tracing(&mut matrix, second, 2, &mut crosses, size);
+    start_tracing(&mut matrix, first, 1, &mut crosses);
+    start_tracing(&mut matrix, second, 2, &mut crosses);
     let mut min = 1000000000;
     for cross in crosses {
         let timing = cross.2 as i64;
@@ -191,7 +200,6 @@ mod test {
             cross_distance(
                 &parse("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
                 &parse("U62,R66,U55,R34,D71,R55,D58,R83"),
-                1000
             ),
             159
         );
@@ -199,7 +207,6 @@ mod test {
             cross_distance(
                 &parse("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
                 &parse("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
-                1000
             ),
             135
         );
@@ -208,8 +215,7 @@ mod test {
     #[test]
     fn test_cross_steps_1() {
         assert_eq!(
-            cross_steps(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4"), 20),
-            30
+            cross_steps(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4")), 30
         );
     }
     
@@ -219,7 +225,6 @@ mod test {
             cross_steps(
                 &parse("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
                 &parse("U62,R66,U55,R34,D71,R55,D58,R83"),
-                1000
             ),
             610
         );
@@ -231,7 +236,6 @@ mod test {
             cross_steps(
                 &parse("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
                 &parse("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
-                1000
             ),
             410
         );
