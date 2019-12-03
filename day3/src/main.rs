@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 type Step = u64;
 type Coordinate = (usize, usize, Step);
 
@@ -43,14 +45,13 @@ fn parse(segments: &str) -> Vec<Segment> {
 
 #[derive(Copy, Clone)]
 enum Wire {
-    Empty,
     Pass(i8, Step),
     Cross,
     Origin(i8),
 }
 
 fn step_trough_matrix(
-    matrix: &mut Vec<Wire>,
+    matrix: &mut HashMap<usize, Wire>,
     y: usize,
     x: usize,
     id: i8,
@@ -59,30 +60,21 @@ fn step_trough_matrix(
     size: usize,
 ) {
     *step += 1;
-    match matrix[y * size + x] {
-        Wire::Empty => matrix[y * size + x] = Wire::Pass(id, *step),
-        Wire::Pass(other_id, other_step) => {
-            if id != other_id {
-                matrix[y * size + x] = Wire::Cross;
-                coords.push((y, x, *step + other_step));
+    match matrix.get(&(y * size + x)) {
+        None => {matrix.insert(y * size + x, Wire::Pass(id, *step));},
+        Some(Wire::Pass(other_id, other_step)) => {
+            if id != *other_id {
+                coords.push((y, x, *step + *other_step));
+                matrix.insert(y * size + x, Wire::Cross);
             }
         }
-        Wire::Cross => panic!("Cross over cross"),
-        Wire::Origin(ref mut times) => {
-            match times {
-                0 => *times = 1,
-                1 => *times = 2,
-                _ => {
-                    println!("Can't cross over origin {} times", *times);
-                    *times = *times + 1;
-                }
-            }
-        }
+        Some(Wire::Cross) => panic!("Cross over cross"),
+        Some(Wire::Origin(_)) => {}
     };
 }
 
 fn start_tracing(
-    matrix: &mut Vec<Wire>,
+    matrix: &mut HashMap<usize, Wire>,
     segments: &Vec<Segment>,
     id: i8,
     coords: &mut Vec<Coordinate>,
@@ -90,7 +82,7 @@ fn start_tracing(
 ) {
     let mut x = size / 2;
     let mut y = size / 2;
-    matrix[y * size + x] = Wire::Origin(0);
+    matrix.insert(y * size + x, Wire::Origin(0));
     let mut step = 0;
     for segment in segments {
         match segment {
@@ -123,16 +115,16 @@ fn start_tracing(
 }
 
 #[allow(dead_code)]
-fn print_matrix(matrix: &Vec<Wire>, size: usize) {
+fn print_matrix(matrix: &HashMap<usize, Wire>, size: usize) {
     for y in 0..size {
         for x in 0..size {
             print!(
                 "{} ",
-                match matrix[y * size + x] {
-                    Wire::Empty => String::from(" ."),
-                    Wire::Pass(_, s) => format!("{:02}", s),
-                    Wire::Cross => String::from(" x"),
-                    Wire::Origin(_) => String::from(" @"),
+                match matrix.get(&(y * size + x)) {
+                    None => String::from(" ."),
+                    Some(Wire::Pass(_, s)) => format!("{:02}", s),
+                    Some(Wire::Cross) => String::from(" x"),
+                    Some(Wire::Origin(_)) => String::from(" @"),
                 }
             );
         }
@@ -141,7 +133,7 @@ fn print_matrix(matrix: &Vec<Wire>, size: usize) {
 }
 
 fn cross_distance(first: &Vec<Segment>, second: &Vec<Segment>, size: usize) -> i64 {
-    let mut matrix: Vec<Wire> = vec![Wire::Empty; size * size];
+    let mut matrix = HashMap::new();
     let mut crosses: Vec<Coordinate> = vec![];
     start_tracing(&mut matrix, first, 1, &mut crosses, size);
     start_tracing(&mut matrix, second, 2, &mut crosses, size);
@@ -161,7 +153,7 @@ fn cross_distance(first: &Vec<Segment>, second: &Vec<Segment>, size: usize) -> i
 }
 
 fn cross_steps(first: &Vec<Segment>, second: &Vec<Segment>, size: usize) -> i64 {
-    let mut matrix: Vec<Wire> = vec![Wire::Empty; size * size];
+    let mut matrix = HashMap::new();
     let mut crosses: Vec<Coordinate> = vec![];
     start_tracing(&mut matrix, first, 1, &mut crosses, size);
     start_tracing(&mut matrix, second, 2, &mut crosses, size);
