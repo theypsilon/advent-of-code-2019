@@ -1,11 +1,36 @@
 fn main() {
     let range_start = 353_096;
     let range_end = 843_212;
-    let passwords = (range_start..=range_end).filter(|n| rule(*n)).count();
-    println!("2. passwords: {}", passwords);
+    println!(
+        "1. passwords: {}",
+        (range_start..=range_end).filter(|n| rules_1(*n)).count()
+    );
+    println!(
+        "2. passwords: {}",
+        (range_start..=range_end).filter(|n| rules_2(*n)).count()
+    );
 }
 
-fn rule(n: i64) -> bool {
+fn rules_1(n: i64) -> bool {
+    let mut min = 0;
+    let mut last_digit = -1;
+    let mut last_digit_condition = false;
+    for digit in decompose_10(n).into_iter() {
+        if digit > min {
+            min = digit;
+        }
+        if min > digit {
+            return false;
+        }
+        if digit == last_digit {
+            last_digit_condition = true;
+        }
+        last_digit = digit;
+    }
+    last_digit_condition
+}
+
+fn rules_2(n: i64) -> bool {
     let mut min = 0;
     let mut last_digit = -1;
     let mut last_digit_counter = 0;
@@ -60,47 +85,51 @@ mod test {
     }
 
     #[test]
-    fn test_rule_00() {
-        assert_eq!(rule(1), false);
+    fn test_rules1_00() {
+        assert_eq!(rules_1(1), false);
     }
 
     #[test]
-    fn test_rule_01() {
-        assert_eq!(rule(112), true);
+    fn test_rules1_01() {
+        assert_eq!(rules_1(112), true);
     }
 
     #[test]
-    fn test_rule_1() {
-        assert_eq!(rule(111111), false);
+    fn test_rules1_1() {
+        assert_eq!(rules_1(111111), true);
     }
 
     #[test]
-    fn test_rule_2() {
-        assert_eq!(rule(223450), false);
+    fn test_rules1_2() {
+        assert_eq!(rules_1(223450), false);
     }
 
     #[test]
-    fn test_rule_3() {
-        assert_eq!(rule(123789), false);
+    fn test_rules1_3() {
+        assert_eq!(rules_1(123789), false);
     }
 
     #[test]
-    fn test_rule_4() {
-        assert_eq!(rule(112233), true);
+    fn test_rules1_4() {
+        assert_eq!(rules_1(112233), true);
+    }
+    #[test]
+    fn test_rules2_1() {
+        assert_eq!(rules_2(111111), false);
     }
 
     #[test]
     fn test_rule_5() {
-        assert_eq!(rule(123444), false);
+        assert_eq!(rules_2(123444), false);
     }
 
     #[test]
     fn test_rule_5bis() {
-        assert_eq!(rule(111), false);
+        assert_eq!(rules_2(111), false);
     }
 
     #[test]
     fn test_rule_6() {
-        assert_eq!(rule(111122), true);
+        assert_eq!(rules_2(111122), true);
     }
 }
