@@ -18,11 +18,17 @@ fn main() {
 }
 
 #[derive(PartialEq, Debug)]
-enum Segment {
-    R(i64),
-    L(i64),
-    U(i64),
-    D(i64),
+struct Segment {
+    travel: i64,
+    dir: Direction,
+}
+
+#[derive(PartialEq, Debug)]
+enum Direction {
+    R,
+    L,
+    U,
+    D,
 }
 
 fn parse(segments: &str) -> Vec<Segment> {
@@ -32,12 +38,15 @@ fn parse(segments: &str) -> Vec<Segment> {
         .map(|segment| {
             let parts = segment.split_at(1);
             let number = parts.1.parse::<i64>().unwrap();
-            match String::from(parts.0).chars().nth(0) {
-                Some('R') => Segment::R(number),
-                Some('L') => Segment::L(number),
-                Some('U') => Segment::U(number),
-                Some('D') => Segment::D(number),
-                None | Some(_) => panic!("Couldn't parse!"),
+            Segment {
+                travel: number,
+                dir: match String::from(parts.0).chars().nth(0) {
+                    Some('R') => Direction::R,
+                    Some('L') => Direction::L,
+                    Some('U') => Direction::U,
+                    Some('D') => Direction::D,
+                    None | Some(_) => panic!("Couldn't parse!"),
+                },
             }
         })
         .collect::<Vec<Segment>>()
@@ -47,7 +56,7 @@ fn parse(segments: &str) -> Vec<Segment> {
 enum Wire {
     Pass(i8, Step),
     Cross,
-    Origin(i8),
+    Origin,
 }
 
 fn step_trough_matrix(
@@ -56,19 +65,20 @@ fn step_trough_matrix(
     x: i64,
     id: i8,
     coords: &mut Vec<Coordinate>,
-    step: &mut Step,
+    step: Step,
 ) {
-    *step += 1;
-    match matrix.get(&(y,x)) {
-        None => {matrix.insert((y,x), Wire::Pass(id, *step));},
+    match matrix.get(&(y, x)) {
+        None => {
+            matrix.insert((y, x), Wire::Pass(id, step));
+        }
         Some(Wire::Pass(other_id, other_step)) => {
             if id != *other_id {
-                coords.push((y, x, *step + *other_step));
-                matrix.insert((y,x), Wire::Cross);
+                coords.push((y, x, step + *other_step));
+                matrix.insert((y, x), Wire::Cross);
             }
         }
         Some(Wire::Cross) => panic!("Cross over cross"),
-        Some(Wire::Origin(_)) => {}
+        Some(Wire::Origin) => {}
     };
 }
 
@@ -80,34 +90,26 @@ fn start_tracing(
 ) {
     let mut x = 0;
     let mut y = 0;
-    matrix.insert((y, x), Wire::Origin(0));
+    matrix.insert((y, x), Wire::Origin);
     let mut step = 0;
-    for segment in segments {
-        match segment {
-            Segment::R(value) => {
-                for i in 1..= *value {
-                    step_trough_matrix(matrix, y, x + i, id, coords, &mut step);
+    for Segment { travel, dir } in segments {
+        for _ in 1..=*travel {
+            match dir {
+                Direction::R => {
+                    x = x + 1;
                 }
-                x = x + value;
-            }
-            Segment::L(value) => {
-                for i in 1..= *value {
-                    step_trough_matrix(matrix, y, x - i, id, coords, &mut step);
+                Direction::L => {
+                    x = x - 1;
                 }
-                x = x - value;
-            }
-            Segment::U(value) => {
-                for i in 1..= *value {
-                    step_trough_matrix(matrix, y - i, x, id, coords, &mut step);
+                Direction::U => {
+                    y = y - 1;
                 }
-                y = y - value;
-            }
-            Segment::D(value) => {
-                for i in 1..= *value {
-                    step_trough_matrix(matrix, y + i, x, id, coords, &mut step);
+                Direction::D => {
+                    y = y + 1;
                 }
-                y = y + value;
             }
+            step += 1;
+            step_trough_matrix(matrix, y, x, id, coords, step);
         }
     }
 }
@@ -130,15 +132,15 @@ fn print_matrix(matrix: &HashMap<(i64, i64), Wire>) {
             max.1 = *y;
         }
     }
-    for y in min.1 - 2 .. max.1 + 2 {
-        for x in min.0 - 2 .. max.0 + 2 {
+    for y in min.1 - 2..max.1 + 2 {
+        for x in min.0 - 2..max.0 + 2 {
             print!(
                 "{} ",
                 match matrix.get(&(y, x)) {
                     None => String::from(" ."),
                     Some(Wire::Pass(_, s)) => format!("{:02}", s),
                     Some(Wire::Cross) => String::from(" x"),
-                    Some(Wire::Origin(_)) => String::from(" @"),
+                    Some(Wire::Origin) => String::from(" @"),
                 }
             );
         }
@@ -186,10 +188,22 @@ mod test {
         assert_eq!(
             parse("R10,L11,D12,U13"),
             vec![
-                Segment::R(10),
-                Segment::L(11),
-                Segment::D(12),
-                Segment::U(13)
+                Segment {
+                    travel: 10,
+                    dir: Direction::R
+                },
+                Segment {
+                    travel: 11,
+                    dir: Direction::L
+                },
+                Segment {
+                    travel: 12,
+                    dir: Direction::D
+                },
+                Segment {
+                    travel: 13,
+                    dir: Direction::U
+                }
             ]
         );
     }
@@ -215,10 +229,11 @@ mod test {
     #[test]
     fn test_cross_steps_1() {
         assert_eq!(
-            cross_steps(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4")), 30
+            cross_steps(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4")),
+            30
         );
     }
-    
+
     #[test]
     fn test_cross_steps_3() {
         assert_eq!(
