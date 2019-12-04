@@ -95,18 +95,10 @@ fn start_tracing(
     for Segment { travel, dir } in segments {
         for _ in 1..=*travel {
             match dir {
-                Direction::R => {
-                    x = x + 1;
-                }
-                Direction::L => {
-                    x = x - 1;
-                }
-                Direction::U => {
-                    y = y - 1;
-                }
-                Direction::D => {
-                    y = y + 1;
-                }
+                Direction::R => x = x + 1,
+                Direction::L => x = x - 1,
+                Direction::U => y = y - 1,
+                Direction::D => y = y + 1,
             }
             step += 1;
             step_trough_matrix(matrix, y, x, id, coords, step);
