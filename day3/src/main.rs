@@ -10,7 +10,7 @@ fn main() {
         .collect::<Vec<String>>();
     let first = parse(&inputs[0]);
     let second = parse(&inputs[1]);
-    let (distance, steps) = cross_distance(&first, &second);
+    let (distance, steps) = cross_segments(&first, &second);
     println!("1. distance: {}", distance);
     println!("2. steps: {}", steps);
 }
@@ -138,7 +138,7 @@ fn print_matrix(matrix: &HashMap<(i64, i64), Wire>) {
     }
 }
 
-fn cross_distance(first: &[Segment], second: &[Segment]) -> (i64, i64) {
+fn cross_segments(first: &[Segment], second: &[Segment]) -> (i64, i64) {
     let mut matrix = HashMap::new();
     let mut crosses: Vec<Coordinate> = vec![];
     start_tracing(&mut matrix, first, 1, &mut crosses);
@@ -191,14 +191,14 @@ mod test {
     #[test]
     fn test_cross_distance() {
         assert_eq!(
-            cross_distance(
+            cross_segments(
                 &parse("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
                 &parse("U62,R66,U55,R34,D71,R55,D58,R83"),
             ).0,
             159
         );
         assert_eq!(
-            cross_distance(
+            cross_segments(
                 &parse("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
                 &parse("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
             ).0,
@@ -209,7 +209,7 @@ mod test {
     #[test]
     fn test_cross_steps_1() {
         assert_eq!(
-            cross_distance(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4")).1,
+            cross_segments(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4")).1,
             30
         );
     }
@@ -217,7 +217,7 @@ mod test {
     #[test]
     fn test_cross_steps_3() {
         assert_eq!(
-            cross_distance(
+            cross_segments(
                 &parse("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
                 &parse("U62,R66,U55,R34,D71,R55,D58,R83"),
             ).1,
@@ -228,7 +228,7 @@ mod test {
     #[test]
     fn test_cross_steps_4() {
         assert_eq!(
-            cross_distance(
+            cross_segments(
                 &parse("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
                 &parse("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
             ).1,
