@@ -40,7 +40,7 @@ fn parse(segments: &str) -> Vec<Segment> {
             let number = parts.1.parse::<i64>().unwrap();
             Segment {
                 travel: number,
-                dir: match String::from(parts.0).chars().nth(0) {
+                dir: match parts.0.chars().nth(0) {
                     Some('R') => Direction::R,
                     Some('L') => Direction::L,
                     Some('U') => Direction::U,
