@@ -12,36 +12,21 @@ fn main() {
 }
 
 fn rules_1(n: i64) -> bool {
-    let mut min = 0;
     let mut last_digit = -1;
     let mut last_digit_condition = false;
-    for digit in decompose_10(n).into_iter() {
-        if digit > min {
-            min = digit;
-        }
-        if min > digit {
-            return false;
-        }
+    do_if_increasing_number(n, |digit| {
         if digit == last_digit {
             last_digit_condition = true;
         }
         last_digit = digit;
-    }
-    last_digit_condition
+    }) && last_digit_condition
 }
 
 fn rules_2(n: i64) -> bool {
-    let mut min = 0;
     let mut last_digit = -1;
     let mut last_digit_counter = 0;
     let mut last_digit_condition = false;
-    for digit in decompose_10(n).into_iter() {
-        if digit > min {
-            min = digit;
-        }
-        if min > digit {
-            return false;
-        }
+    do_if_increasing_number(n, |digit| {
         if digit == last_digit {
             last_digit_counter += 1;
         } else {
@@ -51,8 +36,21 @@ fn rules_2(n: i64) -> bool {
             last_digit_counter = 0;
         }
         last_digit = digit;
+    }) && (last_digit_condition || last_digit_counter == 1)
+}
+
+fn do_if_increasing_number(n: i64, mut action: impl FnMut(i64)) -> bool {
+    let mut min = 0;
+    for digit in decompose_10(n).into_iter() {
+        if digit > min {
+            min = digit;
+        }
+        if min > digit {
+            return false;
+        }
+        action(digit);
     }
-    last_digit_condition || last_digit_counter == 1
+    true
 }
 
 fn decompose_10(mut n: i64) -> Vec<i64> {
