@@ -93,7 +93,7 @@ fn start_tracing(
     matrix.insert((y, x), Wire::Origin);
     let mut step = 0;
     for Segment { travel, dir } in segments {
-        for _ in 1..=*travel {
+        for _ in 0 .. *travel {
             match dir {
                 Direction::R => x += 1,
                 Direction::L => x -= 1,
