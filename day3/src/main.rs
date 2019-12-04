@@ -10,10 +10,8 @@ fn main() {
         .collect::<Vec<String>>();
     let first = parse(&inputs[0]);
     let second = parse(&inputs[1]);
-    let distance = cross_distance(&first, &second);
+    let (distance, steps) = cross_distance(&first, &second);
     println!("1. distance: {}", distance);
-
-    let steps = cross_steps(&first, &second);
     println!("2. steps: {}", steps);
 }
 
@@ -140,34 +138,24 @@ fn print_matrix(matrix: &HashMap<(i64, i64), Wire>) {
     }
 }
 
-fn cross_distance(first: &[Segment], second: &[Segment]) -> i64 {
+fn cross_distance(first: &[Segment], second: &[Segment]) -> (i64, i64) {
     let mut matrix = HashMap::new();
     let mut crosses: Vec<Coordinate> = vec![];
     start_tracing(&mut matrix, first, 1, &mut crosses);
     start_tracing(&mut matrix, second, 2, &mut crosses);
-    let mut min = std::i64::MAX;
+    let mut min_distance = std::i64::MAX;
+    let mut min_timing = std::i64::MAX;
     for cross in crosses {
         let distance = cross.0.abs() + cross.1.abs();
-        if distance < min {
-            min = distance;
+        if distance < min_distance {
+            min_distance = distance;
+        }
+        let steps = cross.2 as i64;
+        if steps < min_timing {
+            min_timing = steps;
         }
     }
-    min
-}
-
-fn cross_steps(first: &[Segment], second: &[Segment]) -> i64 {
-    let mut matrix = HashMap::new();
-    let mut crosses: Vec<Coordinate> = vec![];
-    start_tracing(&mut matrix, first, 1, &mut crosses);
-    start_tracing(&mut matrix, second, 2, &mut crosses);
-    let mut min = std::i64::MAX;
-    for cross in crosses {
-        let timing = cross.2 as i64;
-        if timing < min {
-            min = timing;
-        }
-    }
-    min
+    (min_distance,     min_timing)
 }
 
 #[cfg(test)]
@@ -206,14 +194,14 @@ mod test {
             cross_distance(
                 &parse("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
                 &parse("U62,R66,U55,R34,D71,R55,D58,R83"),
-            ),
+            ).0,
             159
         );
         assert_eq!(
             cross_distance(
                 &parse("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
                 &parse("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
-            ),
+            ).0,
             135
         );
     }
@@ -221,7 +209,7 @@ mod test {
     #[test]
     fn test_cross_steps_1() {
         assert_eq!(
-            cross_steps(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4")),
+            cross_distance(&parse("R8,U5,L5,D3"), &parse("U7,R6,D4,L4")).1,
             30
         );
     }
@@ -229,10 +217,10 @@ mod test {
     #[test]
     fn test_cross_steps_3() {
         assert_eq!(
-            cross_steps(
+            cross_distance(
                 &parse("R75,D30,R83,U83,L12,D49,R71,U7,L72"),
                 &parse("U62,R66,U55,R34,D71,R55,D58,R83"),
-            ),
+            ).1,
             610
         );
     }
@@ -240,10 +228,10 @@ mod test {
     #[test]
     fn test_cross_steps_4() {
         assert_eq!(
-            cross_steps(
+            cross_distance(
                 &parse("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"),
                 &parse("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7"),
-            ),
+            ).1,
             410
         );
     }
