@@ -166,8 +166,8 @@ mod test {
     #[test]
     fn test_parse() {
         assert_eq!(
-            parse("R10,L11,D12,U13"),
-            vec![
+            &parse("R10,L11,D12,U13"),
+            &[
                 Segment {
                     travel: 10,
                     dir: Direction::R
