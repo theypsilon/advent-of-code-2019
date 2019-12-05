@@ -6,117 +6,120 @@ fn main() {
     println!("2. outputs: {:?}", result.1);
 }
 
+struct Computer {
+    instructions: Vec<i64>,
+    input: i64,
+    index: usize,
+}
+
+impl Computer {
+    pub fn new(instructions: Vec<i64>, input: i64) -> Self {
+        Computer {
+            instructions,
+            input,
+            index: 0,
+        }
+    }
+
+    pub fn run(mut self) -> (Vec<i64>, Vec<i64>) {
+        let mut output = vec![];
+        loop {
+            let op = self.opcode();
+            match op.de {
+                1 => {
+                    let first = self.get(op.c, 1);
+                    let second = self.get(op.b, 2);
+                    self.set(op.a, 3, first + second);
+                    self.index += 4;
+                }
+                2 => {
+                    let first = self.get(op.c, 1);
+                    let second = self.get(op.b, 2);
+                    self.set(op.a, 3, first * second);
+                    self.index += 4;
+                }
+                3 => {
+                    self.set(op.c, 1, self.input);
+                    self.index += 2;
+                }
+                4 => {
+                    let first = self.get(op.c, 1);
+                    output.push(first);
+                    self.index += 2;
+                }
+                5 => {
+                    let first = self.get(op.c, 1);
+                    let second = self.get(op.b, 2);
+                    if first != 0 {
+                        if second < 0 {
+                            panic!("Second cant be 0 here: {}", second);
+                        }
+                        self.index = second as usize;
+                    } else {
+                        self.index += 3;
+                    }
+                }
+                6 => {
+                    let first = self.get(op.c, 1);
+                    let second = self.get(op.b, 2);
+                    if first == 0 {
+                        if second < 0 {
+                            panic!("Second can't be less than 0 here: {}", second);
+                        }
+                        self.index = second as usize;
+                    } else {
+                        self.index += 3;
+                    }
+                }
+                7 => {
+                    let first = self.get(op.c, 1);
+                    let second = self.get(op.b, 2);
+                    self.set(op.a, 3, if first < second { 1 } else { 0 });
+                    self.index += 4;
+                }
+                8 => {
+                    let first = self.get(op.c, 1);
+                    let second = self.get(op.b, 2);
+                    self.set(op.a, 3, if first == second { 1 } else { 0 });
+                    self.index += 4;
+                }
+                99 => break,
+                _ => panic!("Something went wrong!"),
+            }
+        }
+        (self.instructions, output)
+    }
+
+    pub fn get(&self, mode: i64, offset: i64) -> i64 {
+        match mode {
+            0 => self.instructions[self.instructions[self.index + offset as usize] as usize],
+            1 => self.instructions[self.index + offset as usize],
+            _ => panic!("Mode not implemented"),
+        }
+    }
+
+    pub fn set(&mut self, mode: i64, offset: i64, value: i64) {
+        match mode {
+            0 => {
+                let pointer = self.instructions[self.index + offset as usize] as usize;
+                self.instructions[pointer] = value
+            }
+            1 => self.instructions[self.index + offset as usize] = value,
+            _ => panic!("Mode not implemented"),
+        }
+    }
+
+    fn opcode(&self) -> Opcode {
+        get_opcode(self.instructions[self.index])
+    }
+}
+
 fn computer_one(instructions: Vec<i64>) -> (Vec<i64>, Vec<i64>) {
     computer_n(instructions, 1)
 }
 
 fn computer_n(mut instructions: Vec<i64>, input: i64) -> (Vec<i64>, Vec<i64>) {
-    let mut index = 0;
-    let mut output = vec![];
-    loop {
-        let opcode = get_opcode(instructions[index]);
-        match opcode.de {
-            1 => {
-                let first = get_value(&instructions, opcode.c, (index + 1) as i64);
-                let second = get_value(&instructions, opcode.b, (index + 2) as i64);
-                set_value(
-                    &mut instructions,
-                    opcode.a,
-                    (index + 3) as i64,
-                    first + second,
-                );
-                index += 4;
-            }
-            2 => {
-                let first = get_value(&instructions, opcode.c, (index + 1) as i64);
-                let second = get_value(&instructions, opcode.b, (index + 2) as i64);
-                set_value(
-                    &mut instructions,
-                    opcode.a,
-                    (index + 3) as i64,
-                    first * second,
-                );
-                index += 4;
-            }
-            3 => {
-                set_value(&mut instructions, opcode.c, (index + 1) as i64, input);
-                index += 2;
-            }
-            4 => {
-                let first = get_value(&instructions, opcode.c, (index + 1) as i64);
-                output.push(first);
-                index += 2;
-            }
-            5 => {
-                let first = get_value(&instructions, opcode.c, (index + 1) as i64);
-                let second = get_value(&instructions, opcode.b, (index + 2) as i64);
-                if first != 0 {
-                    if second < 0 {
-                        panic!("Second cant be 0 here: {}", second);
-                    }
-                    index = second as usize;
-                } else {
-                    index += 3;
-                }
-            }
-            6 => {
-                let first = get_value(&instructions, opcode.c, (index + 1) as i64);
-                let second = get_value(&instructions, opcode.b, (index + 2) as i64);
-                if first == 0 {
-                    if second < 0 {
-                        panic!("Second can't be less than 0 here: {}", second);
-                    }
-                    index = second as usize;
-                } else {
-                    index += 3;
-                }
-            }
-            7 => {
-                let first = get_value(&instructions, opcode.c, (index + 1) as i64);
-                let second = get_value(&instructions, opcode.b, (index + 2) as i64);
-                set_value(
-                    &mut instructions,
-                    opcode.a,
-                    (index + 3) as i64,
-                    if first < second { 1 } else { 0 },
-                );
-                index += 4;
-            }
-            8 => {
-                let first = get_value(&instructions, opcode.c, (index + 1) as i64);
-                let second = get_value(&instructions, opcode.b, (index + 2) as i64);
-                set_value(
-                    &mut instructions,
-                    opcode.a,
-                    (index + 3) as i64,
-                    if first == second { 1 } else { 0 },
-                );
-                index += 4;
-            }
-            99 => break,
-            _ => panic!("Something went wrong!"),
-        }
-    }
-    (instructions, output)
-}
-
-fn get_value(instructions: &[i64], mode: i64, value: i64) -> i64 {
-    match mode {
-        0 => instructions[instructions[value as usize] as usize],
-        1 => instructions[value as usize],
-        _ => panic!("Mode not implemented"),
-    }
-}
-
-fn set_value(instructions: &mut Vec<i64>, mode: i64, value: i64, new_value: i64) {
-    match mode {
-        0 => {
-            let pointer = instructions[value as usize] as usize;
-            instructions[pointer] = new_value
-        }
-        1 => instructions[value as usize] = new_value,
-        _ => panic!("Mode not implemented"),
-    }
+    Computer::new(instructions, input).run()
 }
 
 #[derive(Debug, PartialEq)]
@@ -154,6 +157,10 @@ mod test {
         };
     }
 
+    fn get_value(instructions: Vec<i64>, mode: i64, value: i64) -> i64 {
+        Computer::new(instructions, 0).get(mode, value)
+    }
+
     fn stringify(program: Vec<i64>) -> String {
         program
             .iter()
@@ -170,15 +177,15 @@ mod test {
 
         test_opcodes_1: get_opcode(1002) => Opcode {a: 0, b: 1, c: 0, de: 2};
 
-        test_get_value_01: get_value(&vec![0], 0, 0) => 0;
-        test_get_value_02: get_value(&vec![1, 2], 0, 0) => 2;
-        test_get_value_03: get_value(&vec![1, 0], 0, 1) => 1;
-        test_get_value_04c: get_value(&vec![1, 0, 0, 0, 99], 0, 1) => 1;
-        test_get_value_04b: get_value(&vec![1, 0, 0, 0, 99], 0, 2) => 1;
+        test_get_value_01: get_value(vec![0], 0, 0) => 0;
+        test_get_value_02: get_value(vec![1, 2], 0, 0) => 2;
+        test_get_value_03: get_value(vec![1, 0], 0, 1) => 1;
+        test_get_value_04c: get_value(vec![1, 0, 0, 0, 99], 0, 1) => 1;
+        test_get_value_04b: get_value(vec![1, 0, 0, 0, 99], 0, 2) => 1;
 
-        test_get_value_11: get_value(&vec![1], 1, 0) => 1;
-        test_get_value_12: get_value(&vec![1, 2], 1, 1) => 2;
-        test_get_value_13: get_value(&vec![1, 2, 3], 1, 2) => 3;
+        test_get_value_11: get_value(vec![1], 1, 0) => 1;
+        test_get_value_12: get_value(vec![1, 2], 1, 1) => 2;
+        test_get_value_13: get_value(vec![1, 2, 3], 1, 2) => 3;
 
         test_computer_n_01: computer_n(vec![3,9,8,9,10,9,4,9,99,-1,8], 8).1[0] => 1;
         test_computer_n_02: computer_n(vec![3,9,8,9,10,9,4,9,99,-1,8], 7).1[0] => 0;
