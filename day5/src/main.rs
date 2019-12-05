@@ -152,7 +152,7 @@ mod test {
         computer_n(instructions, 1)
     }
 
-    fn computer_n(mut instructions: Vec<i64>, input: i64) -> (Vec<i64>, Vec<i64>) {
+    fn computer_n(instructions: Vec<i64>, input: i64) -> (Vec<i64>, Vec<i64>) {
         Computer::new(instructions, input).run()
     }
     fn get_value(instructions: Vec<i64>, mode: i64, value: i64) -> i64 {
