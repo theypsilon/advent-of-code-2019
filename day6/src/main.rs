@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn main() {
     let orbits = orbits(PUZZLE_INPUT);
