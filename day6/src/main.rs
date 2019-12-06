@@ -22,15 +22,13 @@ fn main() {
         .collect::<HashSet<String>>();
     let common_keys = you_keys.intersection(&san_keys);
 
-    let mut min = 10000000;
-    for key in common_keys {
-        let distance = you_distances[key] + san_distances[key];
-        if min > distance {
-            min = distance;
-        }
+    if let Some(min) = common_keys
+        .into_iter()
+        .map(|key| you_distances[key] + san_distances[key])
+        .min()
+    {
+        println!("2. minimum_distance: {}", min);
     }
-
-    println!("2. minimum_distance: {}", min);
 }
 
 fn orbits(input: &str) -> HashMap<String, String> {
