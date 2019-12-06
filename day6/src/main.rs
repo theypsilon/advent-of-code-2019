@@ -12,12 +12,10 @@ fn main() {
     let san_distances = orbital_distances_from(PUZZLE_INPUT, "SAN");
     let you_keys = you_distances
         .keys()
-        .into_iter()
         .cloned()
         .collect::<HashSet<String>>();
     let san_keys = san_distances
         .keys()
-        .into_iter()
         .cloned()
         .collect::<HashSet<String>>();
     let common_keys = you_keys.intersection(&san_keys);
