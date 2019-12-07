@@ -40,7 +40,9 @@ fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
             });
             match computer.run_until_output() {
                 ComputerState::Paused(value) => output = value,
-                ComputerState::Halted => break 'feedback,
+                ComputerState::Halted => if i == 4 {
+                    break 'feedback
+                },
             }
         }
         result = output;
