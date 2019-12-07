@@ -110,7 +110,7 @@ impl Computer {
     }
 
     fn opcode(&self) -> Opcode {
-        to_opcoode(self.instructions[self.index])
+        to_opcode(self.instructions[self.index])
     }
 }
 
@@ -122,7 +122,7 @@ struct Opcode {
     de: i64,
 }
 
-fn to_opcoode(mut n: i64) -> Opcode {
+fn to_opcode(mut n: i64) -> Opcode {
     let de = n % 100;
     n /= 100;
     let c = n % 10;
@@ -173,7 +173,7 @@ mod test {
         test_computer_one_3: stringify(computer_one(vec![2, 4, 4, 5, 99, 0]).0) => "2,4,4,5,99,9801";
         test_computer_one_4: stringify(computer_one(vec![1, 1, 1, 4, 99, 5, 6, 0, 99]).0) => "30,1,1,4,2,5,6,0,99";
 
-        test_opcodes_1: to_opcoode(1002) => Opcode {a: 0, b: 1, c: 0, de: 2};
+        test_opcodes_1: to_opcode(1002) => Opcode {a: 0, b: 1, c: 0, de: 2};
 
         test_get_value_01: get_value(vec![0], 0, 0) => 0;
         test_get_value_02: get_value(vec![1, 2], 0, 0) => 2;
