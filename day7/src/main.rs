@@ -60,10 +60,10 @@ fn permutations(list: Vec<i64>) -> Vec<Vec<i64>> {
                 let mut others = list[..i].to_vec();
                 others.extend(list[(i + 1)..].iter());
 
-                for sub_list in permutations(others) {
-                    let mut current_list = vec![current];
-                    current_list.extend(sub_list);
-                    result.push(current_list);
+                for sub_result in permutations(others) {
+                    let mut permutation = vec![current];
+                    permutation.extend(sub_result);
+                    result.push(permutation);
                 }
             }
             result
