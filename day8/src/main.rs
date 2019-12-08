@@ -25,9 +25,10 @@ fn render(data: &str, width: usize, height: usize) -> Vec<u32> {
     for n in 0..num_layers {
         for i in 0..width {
             for j in 0..height {
-                let pixel = digits[i + width * j + n * width * height];
-                if pixel != 2 && result[i + width * j] == -1 {
-                    result[i + width * j] = pixel as i32;
+                let source = digits[i + width * j + n * width * height];
+                let target = &mut result[i + width * j];
+                if source != 2 && *target == -1 {
+                    *target = source as i32;
                 }
             }
         }
