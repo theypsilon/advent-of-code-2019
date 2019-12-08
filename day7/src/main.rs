@@ -25,8 +25,8 @@ fn amplifiers_part1(instructions: Instructions, phase: PhaseSetting) -> i64 {
 }
 
 fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
-    const LAST_COMPUTER: usize = 4;
-    let mut computers: Vec<Computer> = (0..=LAST_COMPUTER)
+    let last_computer: usize = phase.len() - 1;
+    let mut computers: Vec<Computer> = (0..=last_computer)
         .map(|i| Computer::new(instructions.clone()).with_input(phase[i]))
         .collect();
 
@@ -37,7 +37,7 @@ fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
             match computer.yield_output() {
                 ComputerState::Paused(value) => output = value,
                 ComputerState::Halted => {
-                    if i == LAST_COMPUTER {
+                    if i == last_computer {
                         break 'feedback;
                     }
                 }
