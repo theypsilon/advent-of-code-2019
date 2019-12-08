@@ -15,9 +15,9 @@ fn main() {
 }
 
 fn amplifiers_part1(instructions: Instructions, phase: PhaseSetting) -> i64 {
-    phase.into_iter().fold(0, |output, digit| {
+    phase.into_iter().fold(0, |output, phase_digit| {
         Computer::new(instructions.clone())
-            .with_input(digit)
+            .with_input(phase_digit)
             .with_input(output)
             .run()
             .outputs[0]
