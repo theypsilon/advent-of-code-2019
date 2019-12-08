@@ -15,15 +15,13 @@ fn main() {
 }
 
 fn amplifiers_part1(instructions: Instructions, phase: PhaseSetting) -> i64 {
-    let mut output = 0;
-    for digit in phase {
-        output = Computer::new(instructions.clone())
+    phase.into_iter().fold(0, |output, digit| {
+        Computer::new(instructions.clone())
             .with_input(digit)
             .with_input(output)
             .run()
-            .outputs[0];
-    }
-    output
+            .outputs[0]
+    })
 }
 
 fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
