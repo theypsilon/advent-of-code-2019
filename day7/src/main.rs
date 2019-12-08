@@ -26,8 +26,9 @@ fn amplifiers_part1(instructions: Instructions, phase: PhaseSetting) -> i64 {
 
 fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
     let last_computer: usize = phase.len() - 1;
-    let mut computers: Vec<Computer> = (0..=last_computer)
-        .map(|i| Computer::new(instructions.clone()).with_input(phase[i]))
+    let mut computers: Vec<Computer> = phase
+        .into_iter()
+        .map(|phase_digit| Computer::new(instructions.clone()).with_input(phase_digit))
         .collect();
 
     let mut output = 0;
