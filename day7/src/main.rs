@@ -30,7 +30,6 @@ fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
         .map(|i| Computer::new(instructions.clone()).with_input(phase[i]))
         .collect();
 
-    let mut result = -1;
     let mut output = 0;
     'feedback: loop {
         for (i, computer) in computers.iter_mut().enumerate() {
@@ -44,9 +43,8 @@ fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
                 }
             }
         }
-        result = output;
     }
-    result
+    output
 }
 
 fn permutations(list: Vec<i64>) -> Vec<Vec<i64>> {
