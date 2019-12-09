@@ -85,7 +85,7 @@ impl Computer {
                     let second = self.get_second(op);
                     if first != 0 {
                         if second < 0 {
-                            panic!("Second cant be 0 here: {}", second);
+                            panic!("Second can't be 0 here: {}", second);
                         }
                         self.ptr = second;
                     } else {
@@ -122,7 +122,7 @@ impl Computer {
                     self.ptr += 2;
                 }
                 99 => return ComputerExecution::Halt,
-                _ => panic!("Something went wrong!"),
+                _ => panic!("Opcode not implemented: {}", op.de),
             }
         }
     }
@@ -151,7 +151,7 @@ impl Computer {
                 let ptr = *self.instruction(self.ptr + offset);
                 self.instruction(ptr + self.relative_base)
             }
-            _ => panic!("Mode not implemented"),
+            _ => panic!("Mode not implemented: {}", mode),
         }
     }
 
@@ -160,9 +160,7 @@ impl Computer {
             if !self.memory.contains_key(&position) {
                 self.memory.insert(position, 0);
             }
-            self.memory
-                .get_mut(&position)
-                .expect("Memory should be initialized.")
+            self.memory.get_mut(&position).expect("Not initialized.")
         } else {
             &mut self.instructions[position as usize]
         }
