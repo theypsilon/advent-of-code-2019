@@ -35,9 +35,9 @@ fn amplifiers_part2(instructions: Instructions, phase: PhaseSetting) -> i64 {
     'feedback: loop {
         for (i, computer) in computers.iter_mut().enumerate() {
             computer.add_input(output);
-            match computer.yield_output() {
-                ComputerState::Paused(value) => output = value,
-                ComputerState::Halted => {
+            match computer.next_output() {
+                ComputerExecution::Yield(o) => output = o,
+                ComputerExecution::Halt => {
                     if i == last_computer {
                         break 'feedback;
                     }
@@ -77,13 +77,12 @@ type Instructions = Vec<i64>;
 struct Computer {
     instructions: Instructions,
     input: VecDeque<i64>,
-    index: usize,
-    finalized: bool,
+    ptr: usize,
 }
 
-enum ComputerState {
-    Paused(i64),
-    Halted,
+enum ComputerExecution {
+    Yield(i64),
+    Halt,
 }
 
 struct ComputerResult {
@@ -97,8 +96,7 @@ impl Computer {
         Computer {
             instructions,
             input: VecDeque::new(),
-            index: 0,
-            finalized: false,
+            ptr: 0,
         }
     }
 
@@ -113,8 +111,8 @@ impl Computer {
 
     pub fn run(mut self) -> ComputerResult {
         let mut outputs = vec![];
-        while let ComputerState::Paused(value) = self.yield_output() {
-            outputs.push(value);
+        while let ComputerExecution::Yield(output) = self.next_output() {
+            outputs.push(output);
         }
         ComputerResult {
             #[cfg(test)]
@@ -123,24 +121,21 @@ impl Computer {
         }
     }
 
-    pub fn yield_output(&mut self) -> ComputerState {
+    pub fn next_output(&mut self) -> ComputerExecution {
         loop {
-            if self.finalized {
-                return ComputerState::Halted;
-            }
             let op = self.opcode();
             match op.de {
                 1 => {
                     let first = self.get(op.c, 1);
                     let second = self.get(op.b, 2);
                     self.set(op.a, 3, first + second);
-                    self.index += 4;
+                    self.ptr += 4;
                 }
                 2 => {
                     let first = self.get(op.c, 1);
                     let second = self.get(op.b, 2);
                     self.set(op.a, 3, first * second);
-                    self.index += 4;
+                    self.ptr += 4;
                 }
                 3 => {
                     if let Some(input) = self.input.pop_front() {
@@ -148,12 +143,12 @@ impl Computer {
                     } else {
                         panic!("Missing input!");
                     }
-                    self.index += 2;
+                    self.ptr += 2;
                 }
                 4 => {
                     let first = self.get(op.c, 1);
-                    self.index += 2;
-                    return ComputerState::Paused(first);
+                    self.ptr += 2;
+                    return ComputerExecution::Yield(first);
                 }
                 5 => {
                     let first = self.get(op.c, 1);
@@ -162,9 +157,9 @@ impl Computer {
                         if second < 0 {
                             panic!("Second cant be 0 here: {}", second);
                         }
-                        self.index = second as usize;
+                        self.ptr = second as usize;
                     } else {
-                        self.index += 3;
+                        self.ptr += 3;
                     }
                 }
                 6 => {
@@ -174,24 +169,24 @@ impl Computer {
                         if second < 0 {
                             panic!("Second can't be less than 0 here: {}", second);
                         }
-                        self.index = second as usize;
+                        self.ptr = second as usize;
                     } else {
-                        self.index += 3;
+                        self.ptr += 3;
                     }
                 }
                 7 => {
                     let first = self.get(op.c, 1);
                     let second = self.get(op.b, 2);
                     self.set(op.a, 3, if first < second { 1 } else { 0 });
-                    self.index += 4;
+                    self.ptr += 4;
                 }
                 8 => {
                     let first = self.get(op.c, 1);
                     let second = self.get(op.b, 2);
                     self.set(op.a, 3, if first == second { 1 } else { 0 });
-                    self.index += 4;
+                    self.ptr += 4;
                 }
-                99 => self.finalized = true,
+                99 => return ComputerExecution::Halt,
                 _ => panic!("Something went wrong!"),
             }
         }
@@ -199,8 +194,8 @@ impl Computer {
 
     pub fn get(&self, mode: i64, offset: i64) -> i64 {
         match mode {
-            0 => self.instructions[self.instructions[self.index + offset as usize] as usize],
-            1 => self.instructions[self.index + offset as usize],
+            0 => self.instructions[self.instructions[self.ptr + offset as usize] as usize],
+            1 => self.instructions[self.ptr + offset as usize],
             _ => panic!("Mode not implemented"),
         }
     }
@@ -208,16 +203,16 @@ impl Computer {
     pub fn set(&mut self, mode: i64, offset: i64, value: i64) {
         match mode {
             0 => {
-                let pointer = self.instructions[self.index + offset as usize] as usize;
-                self.instructions[pointer] = value
+                let ptr = self.instructions[self.ptr + offset as usize] as usize;
+                self.instructions[ptr] = value
             }
-            1 => self.instructions[self.index + offset as usize] = value,
+            1 => self.instructions[self.ptr + offset as usize] = value,
             _ => panic!("Mode not implemented"),
         }
     }
 
     fn opcode(&self) -> Opcode {
-        to_opcode(self.instructions[self.index])
+        to_opcode(self.instructions[self.ptr])
     }
 }
 
