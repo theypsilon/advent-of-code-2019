@@ -156,7 +156,7 @@ impl Computer {
     }
 
     pub fn instruction(&mut self, position: i64) -> &mut i64 {
-        if position > self.instructions.len() as i64 {
+        if position >= self.instructions.len() as i64 {
             if !self.memory.contains_key(&position) {
                 self.memory.insert(position, 0);
             }
