@@ -72,33 +72,33 @@ impl Computer {
             let op = self.opcode();
             match op.de {
                 1 => {
-                    let first = *self.access(op.c, 1);
-                    let second = *self.access(op.b, 2);
-                    *self.access(op.a, 3) = first + second;
+                    let first = self.get_first(op);
+                    let second = self.get_second(op);
+                    self.set_third(op, first + second);
                     self.ptr += 4;
                 }
                 2 => {
-                    let first = *self.access(op.c, 1);
-                    let second = *self.access(op.b, 2);
-                    *self.access(op.a, 3) = first * second;
+                    let first = self.get_first(op);
+                    let second = self.get_second(op);
+                    self.set_third(op, first * second);
                     self.ptr += 4;
                 }
                 3 => {
                     if let Some(input) = self.input.pop_front() {
-                        *self.access(op.c, 1) = input;
+                        self.set_first(op, input);
                     } else {
                         panic!("Missing input!");
                     }
                     self.ptr += 2;
                 }
                 4 => {
-                    let first = *self.access(op.c, 1);
+                    let first = self.get_first(op);
                     self.ptr += 2;
                     return ComputerExecution::Yield(first);
                 }
                 5 => {
-                    let first = *self.access(op.c, 1);
-                    let second = *self.access(op.b, 2);
+                    let first = self.get_first(op);
+                    let second = self.get_second(op);
                     if first != 0 {
                         if second < 0 {
                             panic!("Second cant be 0 here: {}", second);
@@ -109,8 +109,8 @@ impl Computer {
                     }
                 }
                 6 => {
-                    let first = *self.access(op.c, 1);
-                    let second = *self.access(op.b, 2);
+                    let first = self.get_first(op);
+                    let second = self.get_second(op);
                     if first == 0 {
                         if second < 0 {
                             panic!("Second can't be less than 0 here: {}", second);
@@ -121,19 +121,19 @@ impl Computer {
                     }
                 }
                 7 => {
-                    let first = *self.access(op.c, 1);
-                    let second = *self.access(op.b, 2);
-                    *self.access(op.a, 3) = if first < second { 1 } else { 0 };
+                    let first = self.get_first(op);
+                    let second = self.get_second(op);
+                    self.set_third(op, if first < second { 1 } else { 0 });
                     self.ptr += 4;
                 }
                 8 => {
-                    let first = *self.access(op.c, 1);
-                    let second = *self.access(op.b, 2);
-                    *self.access(op.a, 3) = if first == second { 1 } else { 0 };
+                    let first = self.get_first(op);
+                    let second = self.get_second(op);
+                    self.set_third(op, if first == second { 1 } else { 0 });
                     self.ptr += 4;
                 }
                 9 => {
-                    let first = *self.access(op.c, 1);
+                    let first = self.get_first(op);
                     self.relative_base += first;
                     self.ptr += 2;
                 }
@@ -143,7 +143,20 @@ impl Computer {
         }
     }
 
-    pub fn access(&mut self, mode: i64, offset: i64) -> &mut i64 {
+    pub fn get_first(&mut self, op: Opcode) -> i64 {
+        *self.access(op.c, 1)
+    }
+    pub fn get_second(&mut self, op: Opcode) -> i64 {
+        *self.access(op.b, 2)
+    }
+    pub fn set_third(&mut self, op: Opcode, value: i64) {
+        *self.access(op.a, 3) = value;
+    }
+    pub fn set_first(&mut self, op: Opcode, value: i64) {
+        *self.access(op.c, 1) = value;
+    }
+
+    pub fn access(&mut self, mode: u16, offset: i64) -> &mut i64 {
         match mode {
             0 => {
                 let ptr = *self.instruction(self.ptr + offset);
@@ -176,22 +189,22 @@ impl Computer {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 struct Opcode {
-    a: i64,
-    b: i64,
-    c: i64,
-    de: i64,
+    a: u16,
+    b: u16,
+    c: u16,
+    de: u16,
 }
 
 fn to_opcode(mut n: i64) -> Opcode {
-    let de = n % 100;
+    let de: u16 = (n % 100) as u16;
     n /= 100;
-    let c = n % 10;
+    let c: u16 = (n % 10) as u16;
     n /= 10;
-    let b = n % 10;
+    let b: u16 = (n % 10) as u16;
     n /= 10;
-    let a = n % 10;
+    let a: u16 = (n % 10) as u16;
     Opcode { a, b, c, de }
 }
 
@@ -217,7 +230,7 @@ mod test {
     fn computer_n(instructions: Instructions, input: i64) -> ComputerResult {
         Computer::new(instructions).with_input(input).run()
     }
-    fn get_value(instructions: Instructions, mode: i64, value: i64) -> i64 {
+    fn get_value(instructions: Instructions, mode: u16, value: i64) -> i64 {
         *Computer::new(instructions)
             .with_input(0)
             .access(mode, value)
