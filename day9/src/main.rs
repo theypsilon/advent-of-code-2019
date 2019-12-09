@@ -1,16 +1,10 @@
 use std::collections::{HashMap, VecDeque};
 
 fn main() {
-    let outputs = Computer::new(PUZZLE_INPUT.to_vec())
-        .with_input(1)
-        .run()
-        .outputs;
+    let outputs = Computer::new(PUZZLE_INPUT.to_vec()).with_input(1).run();
     println!("1. outputs: {:?}", outputs);
 
-    let outputs = Computer::new(PUZZLE_INPUT.to_vec())
-        .with_input(2)
-        .run()
-        .outputs;
+    let outputs = Computer::new(PUZZLE_INPUT.to_vec()).with_input(2).run();
     println!("2. outputs: {:?}", outputs);
 }
 
@@ -27,12 +21,6 @@ struct Computer {
 enum ComputerExecution {
     Yield(i64),
     Halt,
-}
-
-struct ComputerResult {
-    #[cfg(test)]
-    instructions: Instructions,
-    outputs: Vec<i64>,
 }
 
 impl Computer {
@@ -55,16 +43,12 @@ impl Computer {
         self.input.push_back(input);
     }
 
-    pub fn run(mut self) -> ComputerResult {
+    pub fn run(&mut self) -> Vec<i64> {
         let mut outputs = vec![];
         while let ComputerExecution::Yield(output) = self.next_output() {
             outputs.push(output);
         }
-        ComputerResult {
-            #[cfg(test)]
-            instructions: self.instructions,
-            outputs,
-        }
+        outputs
     }
 
     pub fn next_output(&mut self) -> ComputerExecution {
@@ -223,12 +207,18 @@ mod test {
             )*
         };
     }
+    struct ComputerResult {
+        computer: Computer,
+        outputs: Vec<i64>,
+    }
     fn computer_one(instructions: Instructions) -> ComputerResult {
         computer_n(instructions, 1)
     }
 
     fn computer_n(instructions: Instructions, input: i64) -> ComputerResult {
-        Computer::new(instructions).with_input(input).run()
+        let mut computer = Computer::new(instructions).with_input(input);
+        let outputs = computer.run();
+        ComputerResult { computer, outputs }
     }
     fn get_value(instructions: Instructions, mode: u16, value: i64) -> i64 {
         *Computer::new(instructions)
@@ -254,10 +244,10 @@ mod test {
     }
 
     eq_tests! {
-        computer_one_1: stringify(computer_one(vec![1, 0, 0, 0, 99]).instructions) => "2,0,0,0,99";
-        computer_one_2: stringify(computer_one(vec![2, 3, 0, 3, 99]).instructions) => "2,3,0,6,99";
-        computer_one_3: stringify(computer_one(vec![2, 4, 4, 5, 99, 0]).instructions) => "2,4,4,5,99,9801";
-        computer_one_4: stringify(computer_one(vec![1, 1, 1, 4, 99, 5, 6, 0, 99]).instructions) => "30,1,1,4,2,5,6,0,99";
+        computer_one_1: stringify(computer_one(vec![1, 0, 0, 0, 99]).computer.instructions) => "2,0,0,0,99";
+        computer_one_2: stringify(computer_one(vec![2, 3, 0, 3, 99]).computer.instructions) => "2,3,0,6,99";
+        computer_one_3: stringify(computer_one(vec![2, 4, 4, 5, 99, 0]).computer.instructions) => "2,4,4,5,99,9801";
+        computer_one_4: stringify(computer_one(vec![1, 1, 1, 4, 99, 5, 6, 0, 99]).computer.instructions) => "30,1,1,4,2,5,6,0,99";
 
         opcodes_1: to_opcode(1002) => Opcode {a: 0, b: 1, c: 0, de: 2};
 
@@ -277,7 +267,7 @@ mod test {
         op_203_base_0_input_42_eq_42: computer_n(vec![203, 1, 4, 1, 99], 42).outputs[0] => 42;
         op_203_base_0_eq_op_3: computer_n(vec![203, 1, 4, 1, 99], 42).outputs[0] => computer_n(vec![3, 1, 4, 1, 99], 42).outputs[0];
 
-        relative_mode_example_1: stringify(computer_n(vec![109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99], 42).instructions) => "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99";
+        relative_mode_example_1: stringify(computer_n(vec![109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99], 42).computer.instructions) => "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99";
         relative_mode_example_2: count_digits(computer_n(vec![1102,34915192,34915192,7,4,7,99,0], 42).outputs[0]) => 16;
         relative_mode_example_3: computer_n(vec![104,1125899906842624,99], 42).outputs[0] => 1125899906842624;
 
