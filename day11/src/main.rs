@@ -1,7 +1,7 @@
 use std::collections::{HashMap, VecDeque};
 
 fn main() {
-    let (mut panels, borders) = part_1(PUZZLE_INPUT.to_vec());
+    let (mut panels, borders) = run_robot(PUZZLE_INPUT.to_vec());
     println!("1. panels: {}", panels.len());
     println!("2. code:");
     let (min_x, min_y, max_x, max_y) = borders;
@@ -23,7 +23,7 @@ fn main() {
     }
 }
 
-fn part_1(instructions: Vec<i64>) -> (HashMap<(i64, i64), Panel>, (i64, i64, i64, i64)) {
+fn run_robot(instructions: Vec<i64>) -> (HashMap<(i64, i64), Panel>, (i64, i64, i64, i64)) {
     let mut computer = Computer::new(instructions);
     let mut robot = Robot {
         dir: Direction::Up,
