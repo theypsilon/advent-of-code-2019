@@ -25,19 +25,19 @@ fn run_until_first_state(input: &str) -> usize {
         mut pos_z,
         mut vel_z,
     } = soa_moons;
-    let ticks_x = run_until_match(
+    let ticks_x = run_until_match_other(
         &couples,
         &mut pos_x,
         &mut vel_x,
         (&initial_state.pos_x, &initial_state.vel_x),
     );
-    let ticks_y = run_until_match(
+    let ticks_y = run_until_match_other(
         &couples,
         &mut pos_y,
         &mut vel_y,
         (&initial_state.pos_y, &initial_state.vel_y),
     );
-    let ticks_z = run_until_match(
+    let ticks_z = run_until_match_other(
         &couples,
         &mut pos_z,
         &mut vel_z,
@@ -46,7 +46,7 @@ fn run_until_first_state(input: &str) -> usize {
     lcm(lcm(ticks_x, ticks_y), ticks_z)
 }
 
-fn run_until_match(
+fn run_until_match_other(
     couples: &[(usize, usize)],
     pos: &mut [V3DComponent],
     vel: &mut [V3DComponent],
