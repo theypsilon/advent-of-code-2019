@@ -1,10 +1,11 @@
 use std::collections::{HashMap, VecDeque};
 
 fn main() {
-    let (mut panels, borders) = run_robot(PUZZLE_INPUT.to_vec());
+    let (panels, _) = run_robot(PUZZLE_INPUT.to_vec(), Color::Black);
     println!("1. panels: {}", panels.len());
-    println!("2. code:");
-    let (min_x, min_y, max_x, max_y) = borders;
+
+    let (mut panels, (min_x, min_y, max_x, max_y)) = run_robot(PUZZLE_INPUT.to_vec(), Color::White);
+    println!("2. register code:");
     for y in min_y..=max_y {
         for x in min_x..=max_x {
             let pos = (x, y);
@@ -23,14 +24,17 @@ fn main() {
     }
 }
 
-fn run_robot(instructions: Vec<i64>) -> (HashMap<(i64, i64), Panel>, (i64, i64, i64, i64)) {
+fn run_robot(
+    instructions: Vec<i64>,
+    initial_color: Color,
+) -> (HashMap<(i64, i64), Panel>, (i64, i64, i64, i64)) {
     let mut computer = Computer::new(instructions);
     let mut robot = Robot {
         dir: Direction::Up,
         pos: (0, 0),
     };
     let mut panels: HashMap<(i64, i64), Panel> = HashMap::new();
-    panels.insert((0, 0), Panel::new(Color::White));
+    panels.insert((0, 0), Panel::new(initial_color));
     let mut min_x = 10000000;
     let mut min_y = 10000000;
     let mut max_x = -10000000;
