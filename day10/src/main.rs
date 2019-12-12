@@ -1,12 +1,12 @@
 fn main() {
     let (max, (x, y)) = max_visibility(PUZZLE_INPUT).unwrap();
-    println!("1. max visibility at: {}", max);
+    println!("1. With max visibility we see {} asteroids.", max);
 
     let position = guess_nth(PUZZLE_INPUT, x, y, 200).unwrap();
-    println!("2. the 200th destroyed asteroid would be: {:?}", position);
+    println!("2. The 200th destroyed asteroid would be the one at: {:?}", position);
 }
 
-fn parse_asteroids(input: &str) -> Vec<Vec<i64>> {
+fn parse_asteroids(input: &str) -> Vec<Vec<u8>> {
     input
         .split('\n')
         .collect::<Vec<&str>>()
@@ -16,7 +16,7 @@ fn parse_asteroids(input: &str) -> Vec<Vec<i64>> {
                 .chars()
                 .filter(|c| *c == '#' || *c == '.')
                 .map(|c| if c == '#' { 1 } else { 0 })
-                .collect::<Vec<i64>>()
+                .collect::<Vec<u8>>()
         })
         .collect()
 }
@@ -45,7 +45,7 @@ const THETA_START: f64 = -180.0 * std::f64::consts::PI * (1.0 / 180.0);
 const THETA_END: f64 = THETA_START + 2.0 * std::f64::consts::PI;
 const THETA_STEP: f64 = RAYCASTING_RESOLUTION * std::f64::consts::PI * (1.0 / 180.0);
 
-fn sonar_around(asteroids: &[Vec<i64>], x: usize, y: usize) -> Vec<(usize, usize)> {
+fn sonar_around(asteroids: &[Vec<u8>], x: usize, y: usize) -> Vec<(usize, usize)> {
     let mut theta = THETA_END;
     let mut detections = vec![];
     while theta > THETA_START {
@@ -64,7 +64,7 @@ const RAY_STEP: f64 = RAYCASTING_RESOLUTION;
 const MIN_DISTANCE: f64 = RAYCASTING_RESOLUTION;
 
 fn trace_ray(
-    asteroids: &[Vec<i64>],
+    asteroids: &[Vec<u8>],
     origin_x: usize,
     origin_y: usize,
     trajectory: MVec,
