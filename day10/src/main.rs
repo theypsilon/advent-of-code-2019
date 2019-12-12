@@ -6,7 +6,13 @@ fn main() {
     println!("2. The 200th destroyed asteroid would be the one at: {:?}", position);
 }
 
-fn parse_asteroids(input: &str) -> Vec<Vec<u8>> {
+#[derive(PartialEq)]
+enum Space {
+    Void,
+    Asteroid
+}
+
+fn parse_asteroids(input: &str) -> Vec<Vec<Space>> {
     input
         .split('\n')
         .collect::<Vec<&str>>()
@@ -15,8 +21,8 @@ fn parse_asteroids(input: &str) -> Vec<Vec<u8>> {
             piece
                 .chars()
                 .filter(|c| *c == '#' || *c == '.')
-                .map(|c| if c == '#' { 1 } else { 0 })
-                .collect::<Vec<u8>>()
+                .map(|c| if c == '#' { Space::Asteroid } else { Space::Void })
+                .collect::<Vec<Space>>()
         })
         .collect()
 }
@@ -26,7 +32,7 @@ fn max_visibility(input: &str) -> Option<(usize, (usize, usize))> {
     let mut result = None;
     for y in 0..asteroids.len() {
         for x in 0..asteroids[0].len() {
-            if asteroids[y][x] == 0 {
+            if asteroids[y][x] == Space::Void {
                 continue;
             }
             let detections = sonar_around(&asteroids, x, y);
@@ -45,7 +51,7 @@ const THETA_START: f64 = -180.0 * std::f64::consts::PI * (1.0 / 180.0);
 const THETA_END: f64 = THETA_START + 2.0 * std::f64::consts::PI;
 const THETA_STEP: f64 = RAYCASTING_RESOLUTION * std::f64::consts::PI * (1.0 / 180.0);
 
-fn sonar_around(asteroids: &[Vec<u8>], x: usize, y: usize) -> Vec<(usize, usize)> {
+fn sonar_around(asteroids: &[Vec<Space>], x: usize, y: usize) -> Vec<(usize, usize)> {
     let mut theta = THETA_END;
     let mut detections = vec![];
     while theta > THETA_START {
@@ -64,7 +70,7 @@ const RAY_STEP: f64 = RAYCASTING_RESOLUTION;
 const MIN_DISTANCE: f64 = RAYCASTING_RESOLUTION;
 
 fn trace_ray(
-    asteroids: &[Vec<u8>],
+    asteroids: &[Vec<Space>],
     origin_x: usize,
     origin_y: usize,
     trajectory: MVec,
@@ -77,7 +83,7 @@ fn trace_ray(
     {
         let (cell_x, cell_y) = from_f64_to_usize(ray);
         ray = ray + trajectory * RAY_STEP;
-        if cell_x == origin_x && cell_y == origin_y || asteroids[cell_y][cell_x] != 1 {
+        if cell_x == origin_x && cell_y == origin_y || asteroids[cell_y][cell_x] != Space::Asteroid {
             continue;
         }
         let distance = module(ray - from_usize_to_f64(cell_x, cell_y));
@@ -93,11 +99,11 @@ fn guess_nth(input: &str, x: usize, y: usize, n: usize) -> Option<(usize, usize)
     let mut destroyed = 0;
     loop {
         let detections = sonar_around(&asteroids, x, y);
-        if detections.is_empty() {
+        if detections.is_Void() {
             break;
         }
         for (x, y) in detections {
-            asteroids[y][x] = 0;
+            asteroids[y][x] = Space::Void;
             destroyed += 1;
             if destroyed == n {
                 return Some((x, y));
