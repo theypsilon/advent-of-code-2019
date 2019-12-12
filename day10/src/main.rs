@@ -3,13 +3,13 @@ fn main() {
     println!("1. With max visibility we see {} asteroids.", max);
 
     let position = guess_nth(PUZZLE_INPUT, x, y, 200).unwrap();
-    println!("2. The 200th destroyed asteroid would be the one at: {:?}", position);
+    println!("2. The 200th destroyed asteroid would be: {:?}", position);
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 enum Space {
     Void,
-    Asteroid
+    Asteroid,
 }
 
 fn parse_asteroids(input: &str) -> Vec<Vec<Space>> {
@@ -21,7 +21,13 @@ fn parse_asteroids(input: &str) -> Vec<Vec<Space>> {
             piece
                 .chars()
                 .filter(|c| *c == '#' || *c == '.')
-                .map(|c| if c == '#' { Space::Asteroid } else { Space::Void })
+                .map(|c| {
+                    if c == '#' {
+                        Space::Asteroid
+                    } else {
+                        Space::Void
+                    }
+                })
                 .collect::<Vec<Space>>()
         })
         .collect()
@@ -83,7 +89,8 @@ fn trace_ray(
     {
         let (cell_x, cell_y) = from_f64_to_usize(ray);
         ray = ray + trajectory * RAY_STEP;
-        if cell_x == origin_x && cell_y == origin_y || asteroids[cell_y][cell_x] != Space::Asteroid {
+        if cell_x == origin_x && cell_y == origin_y || asteroids[cell_y][cell_x] != Space::Asteroid
+        {
             continue;
         }
         let distance = module(ray - from_usize_to_f64(cell_x, cell_y));
@@ -184,8 +191,8 @@ mod test {
     }
 
     eq_tests! {
-        simple_parsing_1: parse_asteroids("#.\n##") => vec![vec![1,0],vec![1,1]];
-        simple_parsing_2: parse_asteroids("..\n##") => vec![vec![0,0],vec![1,1]];
+        simple_parsing_1: parse_asteroids("#.\n##") => vec![vec![Space::Asteroid,Space::Void],vec![Space::Asteroid,Space::Asteroid]];
+        simple_parsing_2: parse_asteroids("..\n##") => vec![vec![Space::Void,Space::Void],vec![Space::Asteroid,Space::Asteroid]];
         example_1: max_visibility_test(".#..#
         .....
         #####
