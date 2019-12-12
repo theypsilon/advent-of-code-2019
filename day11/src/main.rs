@@ -58,7 +58,7 @@ fn run_robot(instructions: Vec<i64>) -> (HashMap<(i64, i64), Panel>, (i64, i64, 
             match out2 {
                 0 => robot.turn_left(),
                 1 => robot.turn_right(),
-                _ => panic!("Unexpected out1 {}", out1),
+                _ => panic!("Unexpected out2 {}", out2),
             }
         } else {
             break;
