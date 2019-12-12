@@ -99,7 +99,7 @@ fn guess_nth(input: &str, x: usize, y: usize, n: usize) -> Option<(usize, usize)
     let mut destroyed = 0;
     loop {
         let detections = sonar_around(&asteroids, x, y);
-        if detections.is_Void() {
+        if detections.is_empty() {
             break;
         }
         for (x, y) in detections {
