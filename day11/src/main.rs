@@ -50,11 +50,11 @@ fn run_robot(instructions: Vec<i64>) -> (HashMap<(i64, i64), Panel>, (i64, i64, 
                 panels.insert(robot.pos, Panel::new(Color::Black));
             }
             let panel = panels.get_mut(&robot.pos).unwrap();
-            match out1 {
-                0 => panel.color = Color::Black,
-                1 => panel.color = Color::White,
+            panel.color = match out1 {
+                0 => Color::Black,
+                1 => Color::White,
                 _ => panic!("Unexpected out1 {}", out1),
-            }
+            };
             match out2 {
                 0 => robot.turn_left(),
                 1 => robot.turn_right(),
