@@ -56,7 +56,7 @@ fn run_until_match(
     loop {
         iterate_couples_split(couples, pos, vel);
         ticks += 1;
-        if equals(&pos, &vel, &other.0, &other.1) {
+        if are_moons_in_equal_state(&pos, &vel, &other.0, &other.1) {
             break;
         }
     }
@@ -208,7 +208,7 @@ impl Moons {
     }
 }
 
-pub fn equals(
+pub fn are_moons_in_equal_state(
     pos: &[V3DComponent],
     vel: &[V3DComponent],
     other_pos: &[V3DComponent],
